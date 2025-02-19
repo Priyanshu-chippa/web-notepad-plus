@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html data-theme="light">
+<head>
+    <title>Web Notepad Plus</title>
+    <style>
+        :root[data-theme="light"] {
+            --bg-color: white;
+            --text-color: #333;
+            --tab-bg: #f0f0f0;
+            --tab-active-bg: white;
+            --task-bg: #f9f9f9;
+            --border-color: #ddd;
+        }
+
+        :root[data-theme="dark"] {
+            --bg-color: #2c2c2c;
+            --text-color: #fff;
+            --tab-bg: #383838;
+            --tab-active-bg: #2c2c2c;
+            --task-bg: #383838;
+            --border-color: #444;
+        }
+
+        body {
+            width: 350px;
+            height: 500px;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .settings-bar {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 8px 15px;
+            background: var(--tab-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .theme-toggle-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .theme-label {
+            color: var(--text-color);
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+
+        .theme-toggle-input {
+            display: none;
+        }
+
+        .theme-toggle-label {
+            display: inline-block;
+            width: 44px;
+            height: 22px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .toggle-track {
+            background-color: #383838;
+            border-radius: 11px;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transition: background-color 0.3s;
+        }
+
+        .toggle-thumb {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 18px;
+            height: 18px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .theme-toggle-input:checked + .theme-toggle-label .toggle-track {
+            background-color: #4CAF50;
+        }
+
+        .theme-toggle-input:checked + .theme-toggle-label .toggle-thumb {
+            transform: translateX(22px);
+        }
+
+        .tab-container {
+            display: flex;
+            background: var(--tab-bg);
+            padding: 10px 10px 0;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: var(--text-color);
+            border-radius: 5px 5px 0 0;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 14px;
+            letter-spacing: -0.01em;
+        }
+
+        .tab.active {
+            background: var(--tab-active-bg);
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+        }
+
+        .content {
+            flex: 1;
+            overflow: auto;
+            padding: 10px;
+            background: var(--bg-color);
+        }
+
+        .tab-content {
+            display: none;
+            height: 100%;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        #notes-text {
+            width: calc(100% - 20px);
+            height: 150px;
+            margin: 10px;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            resize: vertical;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        button {
+            padding: 8px 16px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 14px;
+            letter-spacing: -0.01em;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        #task-input {
+            width: calc(100% - 20px);
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            background: var(--task-bg);
+            margin-bottom: 5px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .task-item span {
+            flex: 1;
+            color: var(--text-color);
+            font-size: 14px;
+        }
+
+        .task-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .delete-task {
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+            border-radius: 50%;
+            background-color: #ff4444;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .delete-task::before {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 2px;
+            background-color: white;
+            transform: rotate(45deg);
+        }
+
+        .delete-task::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 2px;
+            background-color: white;
+            transform: rotate(-45deg);
+        }
+
+        .delete-task:hover {
+            transform: scale(1.1);
+        }
+
+        .task-item.completed span {
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        #timer-display {
+            font-size: 48px;
+            text-align: center;
+            margin: 20px 0;
+            font-family: monospace;
+        }
+
+        .timer-presets {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            padding: 0 10px;
+        }
+
+        .timer-preset {
+            flex: 1;
+            background-color: var(--task-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .timer-preset.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .custom-timer {
+            display: flex;
+            gap: 8px;
+            margin: 10px 0;
+            padding: 0 10px;
+        }
+
+        .custom-timer input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: inherit;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .custom-timer button {
+            padding: 8px 16px;
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 10px;
+            padding: 0 10px;
+        }
+
+        .timer-controls button {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="settings-bar">
+        <div class="theme-toggle-wrapper">
+            <span class="theme-label">Dark Mode</span>
+            <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+            <label for="theme-toggle" class="theme-toggle-label">
+                <span class="toggle-track">
+                    <span class="toggle-thumb"></span>
+                </span>
+            </label>
+        </div>
+    </div>
+
+    <div class="tab-container">
+        <button class="tab active" data-tab="notes">Notes</button>
+        <button class="tab" data-tab="tasks">Tasks</button>
+        <button class="tab" data-tab="timer">Timer</button>
+    </div>
+
+    <div class="content">
+        <!-- Notes Tab -->
+        <div id="notes" class="tab-content active">
+            <textarea id="notes-text" placeholder="Write your notes here..."></textarea>
+            <button id="save-notes">Save Notes</button>
+            <div style="margin-top: 20px;">
+                <h3 style="color: var(--text-color);">Saved Notes:</h3>
+                <div id="saved-notes-list"></div>
+            </div>
+        </div>
+
+        <!-- Tasks Tab -->
+        <div id="tasks" class="tab-content">
+            <input type="text" id="task-input" placeholder="Add a new task...">
+            <button id="add-task">Add Task</button>
+            <div id="task-list"></div>
+        </div>
+
+        <!-- Timer Tab -->
+        <div id="timer" class="tab-content">
+            <div id="timer-display">25:00</div>
+            <div class="timer-presets">
+                <button class="timer-preset" data-time="1500">25 min</button>
+                <button class="timer-preset" data-time="900">15 min</button>
+                <button class="timer-preset" data-time="300">5 min</button>
+            </div>
+            <div class="custom-timer">
+                <input type="number" id="custom-hours" min="0" max="6" placeholder="Hours">
+                <input type="number" id="custom-minutes" min="0" max="59" placeholder="Minutes">
+                <input type="number" id="custom-seconds" min="0" max="59" placeholder="Seconds">
+                <button id="set-custom-time">Set</button>
+            </div>
+            <div class="timer-controls">
+                <button id="start-timer">Start</button>
+                <button id="reset-timer">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Web Notepad Plus",
+  "version": "1.0",
+  "description": "A comprehensive notepad with tasks and timer",
+  "permissions": [
+    "storage",
+    "notifications",
+    "audioCapture"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "web_accessible_resources": [{
+    "resources": ["timer-sound.wav"],
+    "matches": ["<all_urls>"]
+  }]
+} 
